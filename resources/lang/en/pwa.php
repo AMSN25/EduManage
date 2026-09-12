@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'install_title' => 'Install EduManage BD',
+    'install_description' => 'Add EduManage to your home screen for quick access and offline support.',
+    'benefits_title' => 'Why Install?',
+    'benefit_offline' => 'Mark attendance and enter marks even without internet',
+    'benefit_faster' => 'Faster loading with cached static assets',
+    'benefit_home_screen' => 'One-tap access from your home screen',
+    'chrome_android' => 'Chrome on Android',
+    'chrome_step1' => 'Open this page in Chrome.',
+    'chrome_step2' => 'Tap the three-dot menu (⋮) in the top-right corner.',
+    'chrome_step3' => 'Tap "Install app" or "Add to Home Screen".',
+    'ios_safari' => 'Safari on iPhone / iPad',
+    'ios_step1' => 'Open this page in Safari.',
+    'ios_step2' => 'Tap the Share button (square with arrow) at the bottom.',
+    'ios_step3' => 'Scroll down and tap "Add to Home Screen".',
+    'back_to_dashboard' => 'Back to Dashboard',
+    'will_sync' => 'will sync when online',
+    'offline_mode' => 'Offline Mode',
+    'offline_attendance_hint' => 'Your attendance changes will be saved locally and synced when you reconnect.',
+    'offline_marks_hint' => 'Your mark entries will be saved locally and synced when you reconnect.',
+    'unsynced_changes' => 'unsynced change(s)',
+    'sync_now' => 'Sync Now',
+];
