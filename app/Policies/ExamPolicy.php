@@ -76,6 +76,18 @@ class ExamPolicy
     }
 
     /**
+     * Check if user can publish/unpublish exam results.
+     */
+    public function publishResults(User $user): bool
+    {
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        return $user->hasRole('institute-admin');
+    }
+
+    /**
      * Check if user can view marks for an exam.
      */
     public function viewMarks(User $user, Exam $exam): bool

@@ -39,54 +39,29 @@
                 <th class="total-col">Total</th>
                 <th class="total-col">GPA</th>
                 <th class="total-col">Grade</th>
+                <th class="total-col">Position</th>
             </tr>
         </thead>
         <tbody>
             @forelse($students as $student)
                 @php
-                    $totalObtained = 0;
-                    $totalFull = 0;
-                    $subjectResults = [];
-                    foreach ($examSubjects as $es) {
-                        $mark = $marksData[$student->id][$es->id] ?? null;
-                        $obtained = $mark ? ($mark->is_absent ? 0 : $mark->obtained_marks) : 0;
-                        $full = $es->full_marks;
-                        $totalObtained += $obtained;
-                        $totalFull += $full;
-                        $percentage = $full > 0 ? round(($obtained / $full) * 100, 2) : 0;
-                        $subjectResults[$es->id] = ['obtained' => $obtained, 'full' => $full, 'percentage' => $percentage];
-                    }
-                    $overallPercentage = $totalFull > 0 ? round(($totalObtained / $totalFull) * 100, 2) : 0;
-                    // Simple BD grading
-                    $grade = match(true) {
-                        $overallPercentage >= 80 => 'A+',
-                        $overallPercentage >= 70 => 'A',
-                        $overallPercentage >= 60 => 'A-',
-                        $overallPercentage >= 50 => 'B',
-                        $overallPercentage >= 40 => 'C',
-                        $overallPercentage >= 33 => 'D',
-                        default => 'F',
-                    };
-                    $gpa = match(true) {
-                        $overallPercentage >= 80 => 5.0,
-                        $overallPercentage >= 70 => 4.0,
-                        $overallPercentage >= 60 => 3.5,
-                        $overallPercentage >= 50 => 3.0,
-                        $overallPercentage >= 40 => 2.0,
-                        $overallPercentage >= 33 => 1.0,
-                        default => 0.0,
-                    };
+                    $result = $results->get($student->id);
+                    $studentBreakdowns = $breakdowns[$result->id] ?? [];
                 @endphp
                 <tr>
                     <td>{{ $student->roll }}</td>
                     <td class="name-col">{{ $student->name }}</td>
                     <td>{{ $student->student_id }}</td>
                     @foreach($examSubjects as $es)
-                        <td>{{ $subjectResults[$es->id]['obtained'] }}</td>
+                        @php
+                            $bd = $studentBreakdowns[$es->subject_id] ?? null;
+                        @endphp
+                        <td>{{ $bd ? number_format((float)$bd->obtained, 2) : '-' }}</td>
                     @endforeach
-                    <td class="total-col">{{ $totalObtained }}</td>
-                    <td class="total-col">{{ $gpa }}</td>
-                    <td class="total-col">{{ $grade }}</td>
+                    <td class="total-col">{{ $result ? number_format((float)$result->total_obtained, 2) : '-' }}</td>
+                    <td class="total-col">{{ $result ? number_format((float)$result->gpa, 2) : '-' }}</td>
+                    <td class="total-col">{{ $result?->grade ?? '-' }}</td>
+                    <td class="total-col">{{ $result?->position ?? 'N/A' }}</td>
                 </tr>
             @empty
                 <tr>

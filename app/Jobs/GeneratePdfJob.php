@@ -20,10 +20,10 @@ class GeneratePdfJob implements ShouldQueue
     public int $timeout = 120;
 
     /**
-     * @param string $type admit-cards|seat-plan|seat-slips|tabulation|tabulation-bulk
+     * @param string $type admit-cards|seat-plan|seat-slips|tabulation|tabulation-bulk|marksheet|marksheet-bulk
      * @param int $examId
      * @param int|null $classId
-     * @param int|null $roomId
+     * @param int|null $roomId (used as resultId for marksheet type)
      * @param int $instituteId
      * @param string $filename
      */
@@ -55,6 +55,11 @@ class GeneratePdfJob implements ShouldQueue
             ),
             'tabulation' => $pdfService->generateTabulationSheet($this->classId ?? 0, $exam, $institute),
             'tabulation-bulk' => $pdfService->generateBulkTabulationSheets($exam, $institute),
+            'marksheet' => $pdfService->generateMarksheet(
+                \App\Models\Result::findOrFail($this->roomId),
+                $institute
+            ),
+            'marksheet-bulk' => $pdfService->generateBulkMarksheets($this->classId ?? 0, $exam, $institute),
             default => throw new \InvalidArgumentException("Unknown PDF type: {$this->type}"),
         };
 

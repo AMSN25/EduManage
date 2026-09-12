@@ -226,11 +226,57 @@
                 @endif
             @endif
 
-            {{-- Results Tab (placeholder) --}}
+            {{-- Results Tab --}}
             @if($activeTab === 'results')
-                <div class="text-center py-8 text-gray-500">
-                    {{ __('student.results_placeholder') }}
-                </div>
+                @if($publishedResults->isEmpty())
+                    <div class="text-center py-8 text-gray-500">
+                        {{ __('student.results_placeholder') }}
+                    </div>
+                @else
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="px-4 py-3 border-b border-gray-200">
+                            <h3 class="font-medium text-gray-900">{{ __('student.published_results') }}</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('exams.name') }}</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('results.total') }}</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('results.gpa') }}</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('results.grade') }}</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('results.position') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    @foreach($publishedResults as $result)
+                                        <tr>
+                                            <td class="px-4 py-3 font-medium text-gray-900">{{ $result->exam?->name ?? 'N/A' }}</td>
+                                            <td class="px-4 py-3 text-center text-gray-600">{{ number_format((float)$result->total_obtained, 2) }} / {{ number_format((float)$result->total_full, 2) }}</td>
+                                            <td class="px-4 py-3 text-center text-gray-600">{{ number_format((float)$result->gpa, 2) }}</td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    {{ match($result->grade) {
+                                                        'A+' => 'bg-green-100 text-green-800',
+                                                        'A' => 'bg-green-100 text-green-700',
+                                                        'A-' => 'bg-blue-100 text-blue-800',
+                                                        'B' => 'bg-blue-100 text-blue-700',
+                                                        'C' => 'bg-yellow-100 text-yellow-800',
+                                                        'D' => 'bg-orange-100 text-orange-800',
+                                                        'F' => 'bg-red-100 text-red-800',
+                                                        default => 'bg-gray-100 text-gray-800',
+                                                    } }}">
+                                                    {{ $result->grade }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center text-gray-600">{{ $result->position ?? 'N/A' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
             @endif
 
             {{-- Fees Tab --}}

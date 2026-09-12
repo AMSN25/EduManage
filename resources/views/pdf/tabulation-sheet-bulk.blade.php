@@ -38,6 +38,22 @@
                 ->orderBy('roll')
                 ->get();
             $examSubjects = $exam->subjects()->where('class_id', $classId)->with('subject')->get();
+
+            $results = \App\Models\Result::where('exam_id', $exam->id)
+                ->where('institute_id', $institute->id)
+                ->whereIn('student_id', $students->pluck('id'))
+                ->get()
+                ->keyBy('student_id');
+
+            $breakdowns = [];
+            if ($results->isNotEmpty()) {
+                $allBreakdowns = \App\Models\ResultSubjectBreakdown::whereIn('result_id', $results->pluck('id'))
+                    ->with('subject')
+                    ->get();
+                foreach ($allBreakdowns as $bd) {
+                    $breakdowns[$bd->result_id][$bd->subject_id] = $bd;
+                }
+            }
         @endphp
 
         @if(!$loop->first)
@@ -58,19 +74,16 @@
                         <th>{{ $es->subject->name ?? 'N/A' }}<br>({{ $es->full_marks }})</th>
                     @endforeach
                     <th class="total-col">Total</th>
+                    <th class="total-col">GPA</th>
+                    <th class="total-col">Grade</th>
+                    <th class="total-col">Position</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($students as $student)
                     @php
-                        $totalObtained = 0;
-                        $totalFull = 0;
-                        foreach ($examSubjects as $es) {
-                            $mark = $es->marks()->where('student_id', $student->id)->first();
-                            $obtained = $mark ? ($mark->is_absent ? 0 : $mark->obtained_marks) : 0;
-                            $totalObtained += $obtained;
-                            $totalFull += $es->full_marks;
-                        }
+                        $result = $results->get($student->id);
+                        $studentBreakdowns = $result ? ($breakdowns[$result->id] ?? []) : [];
                     @endphp
                     <tr>
                         <td>{{ $student->roll }}</td>
@@ -78,11 +91,14 @@
                         <td>{{ $student->student_id }}</td>
                         @foreach($examSubjects as $es)
                             @php
-                                $mark = $es->marks()->where('student_id', $student->id)->first();
+                                $bd = $studentBreakdowns[$es->subject_id] ?? null;
                             @endphp
-                            <td>{{ $mark ? ($mark->is_absent ? 'Absent' : $mark->obtained_marks) : '-' }}</td>
+                            <td>{{ $bd ? number_format((float)$bd->obtained, 2) : '-' }}</td>
                         @endforeach
-                        <td class="total-col">{{ $totalObtained }}</td>
+                        <td class="total-col">{{ $result ? number_format((float)$result->total_obtained, 2) : '-' }}</td>
+                        <td class="total-col">{{ $result ? number_format((float)$result->gpa, 2) : '-' }}</td>
+                        <td class="total-col">{{ $result?->grade ?? '-' }}</td>
+                        <td class="total-col">{{ $result?->position ?? 'N/A' }}</td>
                     </tr>
                 @empty
                     <tr>

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Exam;
 use App\Models\ExamRoom;
 use App\Models\Institute;
+use App\Models\Result;
 use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -100,7 +101,55 @@ class PdfGenerationService
     }
 
     /**
-     * Generate tabulation sheet for a class.
+     * Generate a single student's marksheet as PDF bytes.
+     */
+    public function generateMarksheet(Result $result, Institute $institute): string
+    {
+        $result->load(['student.classModel', 'student.section', 'student.group', 'exam', 'breakdowns.subject']);
+
+        $breakdowns = $result->breakdowns;
+
+        $view = view('pdf.marksheet', [
+            'student' => $result->student,
+            'result' => $result,
+            'breakdowns' => $breakdowns,
+            'exam' => $result->exam,
+            'institute' => $institute,
+        ]);
+
+        $pdf = Pdf::loadHTML($view->render())
+            ->setPaper('a4', 'portrait')
+            ->setWarnings(false);
+
+        return $pdf->output();
+    }
+
+    /**
+     * Generate bulk marksheets for a class (all students on separate pages).
+     */
+    public function generateBulkMarksheets(int $classId, Exam $exam, Institute $institute): string
+    {
+        $students = Student::where('institute_id', $institute->id)
+            ->where('class_id', $classId)
+            ->where('status', 'active')
+            ->orderBy('roll')
+            ->get();
+
+        $view = view('pdf.marksheet-bulk', [
+            'students' => $students,
+            'exam' => $exam,
+            'institute' => $institute,
+        ]);
+
+        $pdf = Pdf::loadHTML($view->render())
+            ->setPaper('a4', 'portrait')
+            ->setWarnings(false);
+
+        return $pdf->output();
+    }
+
+    /**
+     * Generate tabulation sheet for a class, pulling from results tables.
      */
     public function generateTabulationSheet(int $classId, Exam $exam, Institute $institute): string
     {
@@ -112,11 +161,20 @@ class PdfGenerationService
 
         $examSubjects = $exam->subjects()->where('class_id', $classId)->with('subject')->get();
 
-        $marksData = [];
-        foreach ($students as $student) {
-            foreach ($examSubjects as $es) {
-                $mark = $es->marks()->where('student_id', $student->id)->first();
-                $marksData[$student->id][$es->id] = $mark;
+        $results = Result::where('exam_id', $exam->id)
+            ->where('institute_id', $institute->id)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->get()
+            ->keyBy('student_id');
+
+        $breakdowns = [];
+        if ($results->isNotEmpty()) {
+            $allBreakdowns = \App\Models\ResultSubjectBreakdown::whereIn('result_id', $results->pluck('id'))
+                ->with('subject')
+                ->get();
+
+            foreach ($allBreakdowns as $bd) {
+                $breakdowns[$bd->result_id][$bd->subject_id] = $bd;
             }
         }
 
@@ -124,7 +182,8 @@ class PdfGenerationService
             'students' => $students,
             'exam' => $exam,
             'examSubjects' => $examSubjects,
-            'marksData' => $marksData,
+            'results' => $results,
+            'breakdowns' => $breakdowns,
             'institute' => $institute,
         ]);
 

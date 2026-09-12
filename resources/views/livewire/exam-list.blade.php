@@ -43,10 +43,25 @@
                                     {{ __('exams.status_' . $exam->status) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-right space-x-3">
                                 <a href="{{ route('marks.entry', ['examId' => $exam->id]) }}" class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
                                     {{ __('exams.enter_marks') }}
                                 </a>
+                                @if(auth()->user()->can('publishResults', \App\Models\Exam::class))
+                                    @if($exam->status !== 'published')
+                                        <button wire:click="publishResults({{ $exam->id }})"
+                                                wire:confirm="{{ __('exams.confirm_publish') }}"
+                                                class="text-red-600 hover:text-red-500 text-sm font-medium">
+                                            {{ __('exams.publish_results') }}
+                                        </button>
+                                    @else
+                                        <button wire:click="unpublishResults({{ $exam->id }})"
+                                                wire:confirm="{{ __('exams.confirm_unpublish') }}"
+                                                class="text-yellow-600 hover:text-yellow-500 text-sm font-medium">
+                                            {{ __('exams.unpublish_results') }}
+                                        </button>
+                                    @endif
+                                @endif
                             </td>
                         </tr>
                     @endforeach

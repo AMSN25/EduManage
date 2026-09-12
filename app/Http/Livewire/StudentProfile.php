@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use App\Models\Attendance;
+use App\Models\Result;
 use App\Models\Student;
 use App\Models\StudentFee;
 use Livewire\Component;
@@ -30,6 +31,7 @@ class StudentProfile extends Component
         $attendanceStats = null;
         $recentAttendance = collect();
         $feeData = null;
+        $publishedResults = collect();
 
         if ($this->activeTab === 'attendance') {
             $attendanceStats = $this->getAttendanceStats($student);
@@ -40,11 +42,16 @@ class StudentProfile extends Component
             $feeData = $this->getFeeData($student);
         }
 
+        if ($this->activeTab === 'results') {
+            $publishedResults = $this->getPublishedResults($student);
+        }
+
         return view('livewire.student-profile', [
             'student' => $student,
             'attendanceStats' => $attendanceStats,
             'recentAttendance' => $recentAttendance,
             'feeData' => $feeData,
+            'publishedResults' => $publishedResults,
         ]);
     }
 
@@ -117,5 +124,14 @@ class StudentProfile extends Component
             'total_paid' => $totalPaid,
             'remaining' => $totalDue - $totalPaid,
         ];
+    }
+
+    private function getPublishedResults(Student $student): \Illuminate\Support\Collection
+    {
+        return Result::where('student_id', $student->id)
+            ->published()
+            ->with('exam')
+            ->orderByDesc('created_at')
+            ->get();
     }
 }
