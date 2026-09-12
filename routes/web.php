@@ -33,9 +33,9 @@ use Illuminate\Support\Facades\Route;
 // Auth routes
 Route::middleware('guest')->group(function () {
     Route::get('register', [InstituteRegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('register', [InstituteRegisterController::class, 'register']);
+    Route::post('register', [InstituteRegisterController::class, 'register'])->middleware('throttle:3,1');
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [LoginController::class, 'login']);
+    Route::post('login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 
     // Password reset routes
     Route::get('forgot-password', function () {
@@ -176,6 +176,10 @@ Route::middleware(['auth', 'institute.active'])->group(function () {
     // Phase 10: SMS & Notices
     Route::get('/sms', SmsDashboard::class)->name('sms.dashboard');
     Route::get('/notices', NoticeManage::class)->name('notices.index');
+
+    // Biometric Attendance
+    Route::get('/biometric/devices', \App\Http\Livewire\DeviceManagement::class)->name('biometric.devices');
+    Route::get('/biometric/mappings', \App\Http\Livewire\UserMapping::class)->name('biometric.mappings');
 });
 
 // Subscription expired page

@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 
 // Run trial expiry check daily at midnight
 Schedule::job(new ExpireTrialSubscriptions)->dailyAt('00:00');
+
+// Database backup daily at 2:00 AM
+Schedule::command('backup:database')->dailyAt('02:00');

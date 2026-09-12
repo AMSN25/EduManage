@@ -84,7 +84,17 @@ class ResultCalculationService
             $currentGpa = $entry['gpa'];
             $currentPercentage = $entry['percentage'];
 
-            if ($lastGpa === null || $currentGpa !== $lastGpa || $currentPercentage !== $lastPercentage) {
+            // Round to 2 decimals before comparing to guard against floating-point
+            // representation differences when the same value is computed via
+            // independent code paths (e.g. different subject combinations).
+            // GradingService already rounds to 2 decimals; this re-rounding
+            // explicitly documents the tolerance and is a no-op for identical floats.
+            $currentGpaR = round($currentGpa, 2);
+            $currentPctR = round($currentPercentage, 2);
+            $lastGpaR = $lastGpa !== null ? round($lastGpa, 2) : null;
+            $lastPctR = $lastPercentage !== null ? round($lastPercentage, 2) : null;
+
+            if ($lastGpaR === null || $currentGpaR !== $lastGpaR || $currentPctR !== $lastPctR) {
                 $position++;
             }
 

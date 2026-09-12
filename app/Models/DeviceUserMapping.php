@@ -2,22 +2,24 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToInstitute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AttendanceRecord extends Model
+class DeviceUserMapping extends Model
 {
+    use BelongsToInstitute;
+
     protected $fillable = [
-        'attendance_id',
+        'institute_id',
+        'biometric_device_id',
+        'device_user_id',
         'student_id',
-        'status',
-        'source',
-        'remarks',
     ];
 
-    public function attendance(): BelongsTo
+    public function device(): BelongsTo
     {
-        return $this->belongsTo(Attendance::class);
+        return $this->belongsTo(BiometricDevice::class);
     }
 
     public function student(): BelongsTo

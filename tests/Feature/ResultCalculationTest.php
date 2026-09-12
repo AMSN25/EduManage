@@ -216,6 +216,55 @@ it('assigns dense rank positions correctly', function () {
     expect($results[2]->position)->toBe(2);
 });
 
+it('ties students with same GPA and percentage computed from different subject marks', function () {
+    $data = createExamWithMarks(3);
+    actingAs($data['admin']);
+
+    // Student 1: 90, 50, 55 → A+ (5.0), B (3.0), B (3.0) → GPA 3.67, pct 65.00
+    // Student 2: 55, 90, 50 → B (3.0), A+ (5.0), B (3.0) → GPA 3.67, pct 65.00
+    // Student 3: 40, 40, 40 → C (2.0), C (2.0), C (2.0) → GPA 2.00, pct 40.00
+    // Students 1 & 2 have identical totals but different per-subject marks.
+    $marks = [
+        1 => [90, 50, 55],
+        2 => [55, 90, 50],
+        3 => [40, 40, 40],
+    ];
+
+    foreach ($data['students'] as $student) {
+        foreach ($data['examSubjects'] as $index => $es) {
+            Mark::create([
+                'exam_subject_id' => $es->id,
+                'student_id' => $student->id,
+                'obtained_marks' => $marks[$student->roll][$index],
+                'entered_by' => $data['admin']->id,
+                'status' => 'submitted',
+            ]);
+        }
+    }
+
+    $service = new ResultCalculationService();
+    $service->calculateForExam($data['exam']);
+
+    $results = Result::where('exam_id', $data['exam']->id)
+        ->orderBy('position')
+        ->get();
+
+    expect($results)->toHaveCount(3);
+
+    // Students 1 & 2 tied at position 1 despite different per-subject marks
+    $ranked = $results->filter(fn ($r) => $r->position === 1);
+    expect($ranked)->toHaveCount(2);
+    // 195/300 = 65% → A- → GPA 3.5
+    expect(round((float) $ranked->first()->gpa, 2))->toBe(3.5);
+    expect((float) $ranked->first()->percentage)->toBe(65.0);
+
+    // Student 3 at position 2
+    $third = $results->firstWhere('position', 2);
+    expect($third)->not->toBeNull();
+    // 120/300 = 40% → C → GPA 2.0
+    expect((float) $third->gpa)->toBe(2.0);
+});
+
 it('excludes incomplete students from ranking', function () {
     $data = createExamWithMarks(2);
     actingAs($data['admin']);

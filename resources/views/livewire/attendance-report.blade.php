@@ -92,6 +92,9 @@
                                                    'bg-blue-100 text-blue-800')) }}">
                                                 {{ strtoupper(substr($record->status, 0, 1)) }}
                                             </span>
+                                            @if($record->source === 'device')
+                                                <span class="text-[9px] text-gray-400 mt-0.5 block" title="Recorded via biometric device">D</span>
+                                            @endif
                                         @else
                                             <span class="text-gray-300">-</span>
                                         @endif
